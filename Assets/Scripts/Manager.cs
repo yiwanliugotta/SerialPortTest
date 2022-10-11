@@ -17,6 +17,7 @@ public class Manager : MonoBehaviour
     public InputField dataBitsInput;
     public Dropdown parityDd;
     public Dropdown stopBitsDd;
+    public InputField sendMsgInput;
 
     public string portName = "COM3";//串口名
     public int baudRate = 9600;//波特率
@@ -61,6 +62,27 @@ public class Manager : MonoBehaviour
             else if (btn.name == "关闭按钮")
             {
                 ClosePort();
+            }
+
+            else if (btn.name == "发送")
+            {
+                string sendMsg = sendMsgInput.text;
+                WriteHexMsg(sendMsg);
+            }
+            else if (btn.name == "100的速度移动到原点")
+            {
+                string sendMsg = "01 10 0A F9 00 04 08 04 78 40 00 00 00 00 00 06 59";
+                WriteHexMsg(sendMsg);
+            }
+            else if (btn.name == "50的速度移动到原点")
+            {
+                string sendMsg = "01 10 0A F9 00 04 08 04 78 20 00 00 00 00 00 0f f9";
+                WriteHexMsg(sendMsg);
+            }
+            else if (btn.name == "停止移动")
+            {
+                string sendMsg = "01 10 0A F9 00 04 08 04 18 40 00 00 00 00 00 66 5f";
+                WriteHexMsg(sendMsg);
             }
         }
     }
@@ -177,6 +199,27 @@ public class Manager : MonoBehaviour
     }
 
 
+    public void WriteHexMsg(string msg)
+    {
+        //字符串转16进制数组
+        if (sp != null && sp.IsOpen)
+        {
+            byte[] bytes = StrToHex(msg);
+            try
+            {
+                sp.Write(bytes, 0, bytes.Length);
+                debugText.text += "写入16进制字符串：" + msg + "\n";
+            }
+            catch (Exception ex)
+            {
+                debugText.text += ex.Message+ "\n";
+            }
+          
+        }
+    }
+
+
+
     public string HexToStr(byte[] data)
     {
         StringBuilder sb = new StringBuilder(data.Length * 3);
@@ -190,5 +233,14 @@ public class Manager : MonoBehaviour
         return sb.ToString();
     }
 
-
+    private byte[] StrToHex(string strText)
+    {
+        strText = strText.Replace(" ", "");
+        byte[] bText = new byte[strText.Length / 2];
+        for (int i = 0; i < strText.Length / 2; i++)
+        {
+            bText[i] = Convert.ToByte(Convert.ToInt32(strText.Substring(i * 2, 2), 16));
+        }
+        return bText;
+    }
 }
